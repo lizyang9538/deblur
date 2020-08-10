@@ -3,7 +3,7 @@ import torch
 import math
 import config_ltd as config
 import os
-import operations as op
+import operations_ltd as op
 import matplotlib.pyplot as plt
 from shutil import copyfile
 from model_ltd import LearningToDeblur as Deblur
