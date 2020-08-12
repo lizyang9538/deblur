@@ -59,8 +59,8 @@ def pad_to(original, size):
     Post-pad last two dimensions to "size"
     '''
     original_size = original.size()
-    pad = [0, size[1] - original_size[-1],
-           0, size[0] - original_size[-2]]
+    pad = (0, size[1] - original_size[-1],
+           0, size[0] - original_size[-2])
     return F.pad(original, pad)
 
 

@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from math import ceil, log2
 import config_ltd as config
 import pdb
+import numpy as np
 
 
 class CNN(nn.Module):
@@ -37,7 +38,7 @@ class NonlinearizationUnit(nn.Module):
         self.in_ch = in_ch
         self.out_ch = out_ch
         self.tanh = nn.Tanh()
-        self.cnn = CNN(in_ch, out_ch, kernel_size=1, bias=False)
+        self.cnn = nn.Conv2d(in_ch, out_ch, kernel_size=1, bias=False)
 
     def forward(self, input):
         x = input
@@ -68,33 +69,36 @@ class FeatureExtractor(nn.Module):
 
         self.layers = nn.ModuleList(nonlinear_layers)
 
-        self.linear_0 = CNN(config.feature_extractor_hidden_dim,
-                            out_ch,
-                            kernel_size=1,
-                            bias=False)
-        self.linear_1 = CNN(config.feature_extractor_hidden_dim,
-                            out_ch,
-                            kernel_size=1,
-                            bias=False)
+        self.linear_0 = nn.Conv2d(config.feature_extractor_hidden_dim
+                                    , out_ch
+                                    , kernel_size=1
+                                    , bias=False)
+        self.linear_1 = nn.Conv2d(config.feature_extractor_hidden_dim
+                                    , out_ch
+                                    , kernel_size=1
+                                    , bias=False)
         self.tanh = nn.Tanh()
 
     def forward(self, input):
         x = input
         x = self.cnn(x)
-        for layer in nonlinear_layers:
+        for layer in self.layers:
             x = layer(x)
         x = self.tanh(x)
+        print("shape before x_head and y_head: ", x.shape)
         x_head = self.linear_0(x)
+        print("shape of x_head: ", x_head.shape)
         y_head = self.linear_1(x)
+        print("shape of y_head: ", y_head.shape)
         return x_head, y_head
 
 def estimator(input_x, input_y, beta):
     beta_tensor = torch.from_numpy(np.array([beta]))
 
-    H_x, W_x = x_head.shape[-2], x_head.shape[-1]
-    H_y, W_y = y_head.shape[-2], y_head.shape[-1]
+    H_x, W_x = input_x.shape[-2], input_x.shape[-1]
+    H_y, W_y = input_y.shape[-2], input_y.shape[-1]
     fft_size = [int(2**ceil(H_x + H_y - 1)),int(2**ceil(W_x + W_y - 1))]
-    Fx, Fy = op.fft2(x_head, fft_size), op.fft2(y_head, fft_size)
+    Fx, Fy = op.fft2(input_x, fft_size), op.fft2(input_y, fft_size)
 
     numerator = torch.sum(op.conj_mul(Fx, Fy), dim=-3)
     Fx_square = torch.sum(op.csquare(Fx), dim=-3)

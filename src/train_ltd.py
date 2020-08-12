@@ -36,9 +36,9 @@ if __name__ == '__main__':
     it = 0
     for epoch in range(config.max_epoch):
         for i, (blur, ker, img) in enumerate(trainloader):
-            blur = blur.to(config.device)
-            k_pred, im_pred = model(blur, ker.shape[-2:])
-            ker_gt = ker.to(config.device)
+            # blur = blur.to(config.device)
+            k_pred = model(blur)
+            # ker_gt = ker.to(config.device)
             optimizer.zero_grad()
             loss = op.shift_invariant_mse(k_pred, ker_gt)
             loss.backward()
@@ -48,8 +48,8 @@ if __name__ == '__main__':
             optimizer.step()
             writer.add_scalar('loss', loss.detach(), it)
             if it % config.write_every == 0:
-                writer.add_image('im_pred', make_grid(
-                    im_pred, normalize=True), it)
+                # writer.add_image('im_pred', make_grid(
+                #     im_pred, normalize=True), it)
                 writer.add_image('im_gt', make_grid(
                     img, normalize=True), it)
                 writer.add_image('ker_pred', make_grid(
