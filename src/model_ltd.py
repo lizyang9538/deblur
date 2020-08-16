@@ -130,7 +130,7 @@ class DeblurUnit(nn.Module):
     def forward(self, img):
         x_head, y_head = self.feature_extractor(img)
         k_head = self.kernel_estimator(x_head, y_head)
-        return self.image_estimator(k_head, img)
+        return self.image_estimator(k_head, img), k_head
 
 class LearningToDeblur(nn.Module):
     def __init__(self, num_stacks):
@@ -140,5 +140,5 @@ class LearningToDeblur(nn.Module):
     def forward(self, blur_in):
         x = blur_in
         for net in self.networks:
-            x = net(x)
-        return x
+            x, k_head = net(x)
+        return x, k_head

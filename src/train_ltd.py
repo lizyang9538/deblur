@@ -36,9 +36,10 @@ if __name__ == '__main__':
     it = 0
     for epoch in range(config.max_epoch):
         for i, (blur, ker, img) in enumerate(trainloader):
-            # blur = blur.to(config.device)
-            im_pred = model(blur)
-            # ker_gt = ker.to(config.device)
+            blur = blur.to(config.device)
+            im_pred, k_pred = model(blur)
+            # ker_gt = ker
+            ker_gt = ker.to(config.device)
             optimizer.zero_grad()
             loss = op.shift_invariant_mse(im_pred, img)
             loss.backward()
@@ -52,10 +53,10 @@ if __name__ == '__main__':
                     im_pred, normalize=True), it)
                 writer.add_image('im_gt', make_grid(
                     img, normalize=True), it)
-                # writer.add_image('ker_pred', make_grid(
-                #     k_pred, normalize=True), it)
-                # writer.add_image('ker_gt', make_grid(
-                #     ker_gt, normalize=True), it)
+                writer.add_image('ker_pred', make_grid(
+                    k_pred, normalize=True), it)
+                writer.add_image('ker_gt', make_grid(
+                    ker_gt, normalize=True), it)
             print('Iteration %d, loss %.4f' % (it, loss))
             it += 1
         if config.fine_tune:
