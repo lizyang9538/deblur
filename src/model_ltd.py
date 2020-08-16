@@ -85,28 +85,21 @@ class FeatureExtractor(nn.Module):
         for layer in self.layers:
             x = layer(x)
         x = self.tanh(x)
-        print("shape before x_head and y_head: ", x.shape)
         x_head = self.linear_0(x)
-        print("shape of x_head: ", x_head.shape)
         y_head = self.linear_1(x)
-        print("shape of y_head: ", y_head.shape)
         return x_head, y_head
 
 def estimator(input_x, input_y, beta):
+    # TODO: add beta
     beta_tensor = torch.from_numpy(np.array([beta]))
 
     H_x, W_x = input_x.shape[-2], input_x.shape[-1]
     H_y, W_y = input_y.shape[-2], input_y.shape[-1]
-    fft_size = [int(2**ceil(H_x + H_y - 1)),int(2**ceil(W_x + W_y - 1))]
+    fft_size = [2**(int(log2(ceil(H_x + H_y - 1)))),2**(int(log2(ceil(W_x + W_y - 1))))]
     Fx, Fy = op.fft2(input_x, fft_size), op.fft2(input_y, fft_size)
-
-    numerator = torch.sum(op.conj_mul(Fx, Fy), dim=-3)
-    Fx_square = torch.sum(op.csquare(Fx), dim=-3)
-    denominator = Fx_square
-
-    pdb.set_trace()
-
-    sol = op.ifft2(numerator / denominator.unsqueeze(dim=-1), fft_size)
+    numerator = torch.sum(op.conj_mul(Fx, Fy), dim=-4, keepdim=True)
+    denominator = torch.sum(op.csquare(Fx), dim=-3, keepdim=True)
+    sol = op.ifft2(torch.div(numerator, denominator.unsqueeze(dim=-1)), fft_size)
     return sol
 
 class KernelEstimator(nn.Module):
@@ -137,7 +130,7 @@ class DeblurUnit(nn.Module):
     def forward(self, img):
         x_head, y_head = self.feature_extractor(img)
         k_head = self.kernel_estimator(x_head, y_head)
-        return self.image_estimator(k_head, x_head, img)
+        return self.image_estimator(k_head, img)
 
 class LearningToDeblur(nn.Module):
     def __init__(self, num_stacks):

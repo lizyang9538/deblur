@@ -37,10 +37,10 @@ if __name__ == '__main__':
     for epoch in range(config.max_epoch):
         for i, (blur, ker, img) in enumerate(trainloader):
             # blur = blur.to(config.device)
-            k_pred = model(blur)
+            im_pred = model(blur)
             # ker_gt = ker.to(config.device)
             optimizer.zero_grad()
-            loss = op.shift_invariant_mse(k_pred, ker_gt)
+            loss = op.shift_invariant_mse(im_pred, img)
             loss.backward()
             if math.isnan(loss):
                 __import__('ipdb').set_trace()
@@ -48,14 +48,14 @@ if __name__ == '__main__':
             optimizer.step()
             writer.add_scalar('loss', loss.detach(), it)
             if it % config.write_every == 0:
-                # writer.add_image('im_pred', make_grid(
-                #     im_pred, normalize=True), it)
+                writer.add_image('im_pred', make_grid(
+                    im_pred, normalize=True), it)
                 writer.add_image('im_gt', make_grid(
                     img, normalize=True), it)
-                writer.add_image('ker_pred', make_grid(
-                    k_pred, normalize=True), it)
-                writer.add_image('ker_gt', make_grid(
-                    ker_gt, normalize=True), it)
+                # writer.add_image('ker_pred', make_grid(
+                #     k_pred, normalize=True), it)
+                # writer.add_image('ker_gt', make_grid(
+                #     ker_gt, normalize=True), it)
             print('Iteration %d, loss %.4f' % (it, loss))
             it += 1
         if config.fine_tune:
@@ -64,7 +64,7 @@ if __name__ == '__main__':
             copyfile(model_path, os.path.join(chkpt_dir, 'model_best.pth'))
         else:
             model_path = os.path.join(chkpt_dir, 'cnn_%03d.pth' % epoch)
-            torch.save(net.state_dict(), model_path)
+            torch.save(model.state_dict(), model_path)
             copyfile(model_path, os.path.join(chkpt_dir, 'cnn_latest.pth'))
         print('Model saved to {}'.format(model_path))
         scheduler.step()
