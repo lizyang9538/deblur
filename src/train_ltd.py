@@ -45,6 +45,7 @@ if __name__ == '__main__':
             if config.use_colab:
                 blur = blur.to(config.device)
                 ker_gt = ker.to(config.device)
+                img = img.to(config.device)
             else:
                 ker_gt = ker
 
@@ -62,6 +63,8 @@ if __name__ == '__main__':
                     im_pred, normalize=True), it)
                 writer.add_image('im_gt', make_grid(
                     img, normalize=True), it)
+                writer.add_image('im_blur', make_grid(
+                    blur, normalize=True), it)
                 writer.add_image('ker_pred', make_grid(
                     k_pred, normalize=True), it)
                 writer.add_image('ker_gt', make_grid(

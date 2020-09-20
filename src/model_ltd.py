@@ -100,6 +100,7 @@ def estimator(input_x, input_y, beta):
     numerator = torch.sum(op.conj_mul(Fx, Fy), dim=-4, keepdim=True)
     denominator = torch.sum(op.csquare(Fx), dim=-3, keepdim=True)
     sol = op.ifft2(torch.div(numerator, denominator.unsqueeze(dim=-1)), fft_size)
+    print(sol.shape)
     return sol
 
 class KernelEstimator(nn.Module):
